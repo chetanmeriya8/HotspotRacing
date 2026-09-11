@@ -1,33 +1,25 @@
-name: Build Hotspot Racing APK
-
-on:
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
       - name: Extract game project
         run: |
+          rm -rf game
           mkdir game
-          unzip -o Hotspot_Racing_2_0_4Player.zip -d game
+          unzip -q Hotspot_Racing_2_0_4Player.zip -d game
+
+          echo "Extracted files:"
+          find game -maxdepth 3 -type f | head -100
+
+      - name: Find Android project
+        run: |
+          find game -name settings.gradle -o -name settings.gradle.kts
+          find game -type d -name app
 
       - name: Build APK
         working-directory: game
-        run: gradle assembleDebug
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Hotspot-Racing-APK
-          path: game/app/build/outputs/apk/debug/*.apk
+          path: game/**/build/outputs/apk/debug/*.apk
